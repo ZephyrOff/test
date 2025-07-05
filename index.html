@@ -64,7 +64,6 @@
       const ul = document.createElement('ul');
 
       for (const key in node) {
-        // Ignore les clés système ou scalaires
         if (['icon', 'search', 'theme'].includes(key)) continue;
 
         const item = node[key];
@@ -72,20 +71,23 @@
         const span = document.createElement('span');
         span.textContent = key;
 
-        let isLeaf = false;
+        let hasPage = false;
+        let hasChildren = false;
 
         if (typeof item === 'string' && item.endsWith('.md')) {
-          isLeaf = true;
+          hasPage = true;
           span.onclick = () => loadMarkdown(item);
         } else if (typeof item === 'object') {
           if (typeof item.content === 'string' && item.content.endsWith('.md')) {
-            isLeaf = true;
+            hasPage = true;
             span.onclick = () => loadMarkdown(item.content);
-          } else if (typeof item.content === 'object') {
-            buildMenu(item.content, li);
-          } else {
-            // Pas de `content`, mais potentiellement un sous-arbre directement
-            buildMenu(item, li);
+          }
+
+          // Détermine si le contenu a des enfants
+          const children = (typeof item.content === 'object') ? item.content : item;
+          if (typeof children === 'object' && Object.keys(children).some(k => !['icon'].includes(k))) {
+            hasChildren = true;
+            buildMenu(children, li);
           }
         }
 
@@ -95,6 +97,7 @@
 
       container.appendChild(ul);
     }
+
 
     async function loadMarkdown(path) {
       try {
