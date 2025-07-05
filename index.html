@@ -48,7 +48,6 @@
   <div id="sidebar"></div>
   <div id="content"><h2>Bienvenue</h2><p>Sélectionnez un contenu dans le menu.</p></div>
 
-  <!-- Marked.js pour parser le Markdown côté client -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     async function init() {
@@ -65,31 +64,32 @@
       const ul = document.createElement('ul');
 
       for (const key in node) {
+        // Ignore les clés système ou scalaires
+        if (['icon', 'search', 'theme'].includes(key)) continue;
+
         const item = node[key];
         const li = document.createElement('li');
         const span = document.createElement('span');
         span.textContent = key;
 
-        // Vérifie si c'est une feuille (un fichier .md)
+        let isLeaf = false;
+
         if (typeof item === 'string' && item.endsWith('.md')) {
+          isLeaf = true;
           span.onclick = () => loadMarkdown(item);
-        }
-        // Cas : { icon, content: "file.md" }
-        else if (typeof item === 'object' && item.content && typeof item.content === 'string' && item.content.endsWith('.md')) {
-          span.onclick = () => loadMarkdown(item.content);
-        }
-
-        li.appendChild(span);
-
-        // Si c'est un noeud interne : il a un content objet
-        if (typeof item === 'object') {
-          const childContent = typeof item.content === 'object' ? item.content : item;
-
-          if (typeof childContent === 'object') {
-            buildMenu(childContent, li);
+        } else if (typeof item === 'object') {
+          if (typeof item.content === 'string' && item.content.endsWith('.md')) {
+            isLeaf = true;
+            span.onclick = () => loadMarkdown(item.content);
+          } else if (typeof item.content === 'object') {
+            buildMenu(item.content, li);
+          } else {
+            // Pas de `content`, mais potentiellement un sous-arbre directement
+            buildMenu(item, li);
           }
         }
 
+        li.appendChild(span);
         ul.appendChild(li);
       }
 
