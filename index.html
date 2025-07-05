@@ -5,30 +5,92 @@
   <title>Mon Site</title>
   <style>
     body { font-family: sans-serif; margin: 2rem; }
-    h1 { color: #333; }
-    pre { background: #f8f8f8; padding: 1rem; }
+    nav ul { list-style: none; padding: 0; }
+    nav li { margin: 5px 0; }
+    nav a { text-decoration: none; color: #007acc; }
+    nav a:hover { text-decoration: underline; }
+    #content { margin-top: 2rem; }
   </style>
 </head>
 <body>
-  <h1>Mon Site</h1>
-  <div id="content"></div>
+  <h1 id="site-title">Loading...</h1>
+  <nav id="menu"></nav>
+  <div id="content">Sélectionnez une page</div>
+
+  <!-- Ajoute Marked.js pour rendre le Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script>
     async function init() {
       try {
         const response = await fetch('./site.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('✅ site.json chargé:', data);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const site = await response.json();
 
-        // Exemple de rendu simple :
-        const contentDiv = document.getElementById('content');
-        contentDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        // Met à jour le titre
+        document.getElementById('site-title').textContent = site.title || 'Mon Site';
+
+        // Crée le menu dynamiquement
+        const nav = document.getElementById('menu');
+        const ul = document.createElement('ul');
+
+        for (const [section, sectionData] of Object.entries(site.content)) {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = `#${encodeURIComponent(section)}`;
+          link.textContent = section;
+          li.appendChild(link);
+          ul.appendChild(li);
+
+          // Sous-pages ?
+          if (sectionData.content && typeof sectionData.content === 'object' && !sectionData.content.endsWith('.md')) {
+            const subUl = document.createElement('ul');
+            for (const [sub, subData] of Object.entries(sectionData.content)) {
+              const subLi = document.createElement('li');
+              const subLink = document.createElement('a');
+              subLink.href = `#${encodeURIComponent(section)}/${encodeURIComponent(sub)}`;
+              subLink.textContent = sub;
+              subLi.appendChild(subLink);
+              subUl.appendChild(subLi);
+            }
+            li.appendChild(subUl);
+          }
+        }
+        nav.appendChild(ul);
+
+        // Router: hashchange
+        window.addEventListener('hashchange', renderPage);
+        renderPage(); // render initial
+
+        async function renderPage() {
+          const hash = decodeURIComponent(location.hash.slice(1));
+          if (!hash) return;
+
+          const parts = hash.split('/');
+          let node = site.content;
+          for (const part of parts) {
+            if (node[part]) {
+              node = node[part].content ? node[part] : node[part];
+            }
+          }
+
+          let mdFile = typeof node === 'string' ? node : node.content;
+          if (!mdFile.endsWith('.md')) {
+            document.getElementById('content').innerHTML = `<p>Contenu introuvable.</p>`;
+            return;
+          }
+
+          const mdResponse = await fetch(`./docs/${mdFile}`);
+          if (!mdResponse.ok) {
+            document.getElementById('content').innerHTML = `<p>Erreur lors du chargement du contenu.</p>`;
+            return;
+          }
+          const mdText = await mdResponse.text();
+          document.getElementById('content').innerHTML = marked.parse(mdText);
+        }
 
       } catch (error) {
-        console.error('❌ Erreur lors du chargement de site.json:', error);
+        console.error(error);
       }
     }
 
