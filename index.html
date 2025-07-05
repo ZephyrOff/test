@@ -42,10 +42,6 @@
     li > span:hover {
       text-decoration: underline;
     }
-
-    li ul {
-      margin-top: 5px;
-    }
   </style>
 </head>
 <body>
@@ -65,25 +61,33 @@
       }
     }
 
-    function buildMenu(content, container) {
+    function buildMenu(node, container) {
       const ul = document.createElement('ul');
 
-      for (const key in content) {
-        const item = content[key];
+      for (const key in node) {
+        const item = node[key];
         const li = document.createElement('li');
         const span = document.createElement('span');
         span.textContent = key;
 
-        if (typeof item === 'string' || (typeof item === 'object' && item.content && typeof item.content === 'string' && item.content.endsWith('.md'))) {
-          // Feuille = fichier markdown
-          span.onclick = () => loadMarkdown(item.content || item);
+        // Vérifie si c'est une feuille (un fichier .md)
+        if (typeof item === 'string' && item.endsWith('.md')) {
+          span.onclick = () => loadMarkdown(item);
+        }
+        // Cas : { icon, content: "file.md" }
+        else if (typeof item === 'object' && item.content && typeof item.content === 'string' && item.content.endsWith('.md')) {
+          span.onclick = () => loadMarkdown(item.content);
         }
 
         li.appendChild(span);
 
-        if (typeof item === 'object' && item.content && typeof item.content !== 'string') {
-          // Noeud interne = sous-menu
-          buildMenu(item.content, li);
+        // Si c'est un noeud interne : il a un content objet
+        if (typeof item === 'object') {
+          const childContent = typeof item.content === 'object' ? item.content : item;
+
+          if (typeof childContent === 'object') {
+            buildMenu(childContent, li);
+          }
         }
 
         ul.appendChild(li);
