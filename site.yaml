@@ -1,0 +1,23 @@
+title: Mon Site
+icon: logo.svg
+search: True
+theme: True
+content:
+  mes projets:
+    icon: doc.svg
+    content:
+      projetA:
+        icon: projA.svg
+        content: projetA.md
+      projetB:
+        icon: projB.svg
+        content: projetB.md
+      projetC:
+        debut:
+          icon: projB.svg
+          content: projetB.md
+        fin:
+          icon: projB.svg
+          content: projetB.md
+  mon parcours:
+    content: parcours.md

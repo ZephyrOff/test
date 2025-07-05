@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mon Site</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    h1 { color: #333; }
+    pre { background: #f8f8f8; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Mon Site</h1>
+  <div id="content"></div>
+
+  <script>
+    async function init() {
+      try {
+        const response = await fetch('./site.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('✅ site.json chargé:', data);
+
+        // Exemple de rendu simple :
+        const contentDiv = document.getElementById('content');
+        contentDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement de site.json:', error);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

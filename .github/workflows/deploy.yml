@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Branche principale de ton dépôt
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Récupère ton code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Configure Python (pour générer le search-index)
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Installe tes dépendances (si tu en as)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Si tu utilises des libs type PyYAML etc.
+          # pip install pyyaml
+
+      # Exécute ton script pour générer le fichier
+      - name: Generate search index
+        run: python generate_search_index.py
+      
+      - name: Generate site.json
+        run: python generate_site_json.py
+
+      # Vérifie le contenu généré
+      - name: List output
+        run: ls -al
+
+      # Configure GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # Upload l'artifact vers Pages
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  # Déploiement vers Pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
