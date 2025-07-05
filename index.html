@@ -1,108 +1,162 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full bg-gray-100">
 <head>
   <meta charset="UTF-8" />
-  <title>Mon Site</title>
-  <style>
-    body {
-      display: flex;
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-    nav {
-      width: 250px;
-      background: #f7f7f7;
-      border-right: 1px solid #ddd;
-      padding: 10px;
-    }
-    nav ul {
-      list-style: none;
-      padding-left: 15px;
-    }
-    nav li {
-      margin: 5px 0;
-    }
-    nav li span {
-      cursor: pointer;
-    }
-    #content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    nav li span:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <nav id="sidebar"></nav>
-  <div id="content">Contenu ici</div>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mon Site Tailwind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="h-full flex overflow-hidden">
+
+  <!-- Sidebar -->
+  <nav id="sidebar" class="bg-white border-r border-gray-300 h-full flex flex-col transition-width duration-300 w-64">
+
+    <!-- Toggle button -->
+    <button id="toggleSidebar" 
+      class="p-2 border-b border-gray-300 focus:outline-none hover:bg-gray-100"
+      aria-label="Toggle sidebar">
+      &#9776;
+    </button>
+
+    <!-- Menu container -->
+    <div id="menuContainer" class="overflow-y-auto flex-1 px-2 py-4"></div>
+  </nav>
+
+  <!-- Content -->
+  <main id="content" class="flex-1 p-6 overflow-auto">
+    <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
+    <p>Choisissez une page dans le menu.</p>
+  </main>
+
   <script>
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    toggleBtn.addEventListener('click', () => {
+      if (sidebar.style.width === '4rem') {
+        sidebar.style.width = '16rem'; // 64 = 16rem
+      } else {
+        sidebar.style.width = '4rem';
+      }
+    });
+
+    // Load site.json and build menu
     async function init() {
-      const response = await fetch('site.json');
-      const data = await response.json();
-      const sidebar = document.getElementById('sidebar');
-      buildMenu(data.content || data, sidebar);
+      const res = await fetch('site.json');
+      const data = await res.json();
+      const menuContainer = document.getElementById('menuContainer');
+      menuContainer.innerHTML = '';
+      buildMenu(data.content || data, menuContainer);
     }
 
     function buildMenu(node, container) {
       const ul = document.createElement('ul');
+      ul.className = "space-y-1";
 
-      for (const key in node) {
-        if (['icon', 'search', 'theme'].includes(key)) continue;
+      Object.keys(node).forEach(key => {
+        if (['icon', 'search', 'theme'].includes(key)) return;
 
         const item = node[key];
         const li = document.createElement('li');
-        const span = document.createElement('span');
-        span.textContent = key;
 
+        // Create header container (flex for label + caret)
+        const header = document.createElement('div');
+        header.className = "flex items-center justify-between cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-100";
+
+        const label = document.createElement('span');
+        label.textContent = key;
+        label.className = "text-gray-800";
+
+        header.appendChild(label);
+
+        // Check if this node is a page (content .md)
         let hasPage = false;
         let children = null;
+        let mdPath = null;
 
         if (typeof item === 'string' && item.endsWith('.md')) {
           hasPage = true;
-          span.onclick = () => loadMarkdown(item);
+          mdPath = item;
         } else if (typeof item === 'object') {
           if (typeof item.content === 'string' && item.content.endsWith('.md')) {
             hasPage = true;
-            span.onclick = () => loadMarkdown(item.content);
+            mdPath = item.content;
           }
 
-          // Si content est un objet => sous-sections
+          // Determine children for submenu
           if (typeof item.content === 'object') {
             children = item.content;
           } else {
-            // Autres clés comme sous-sections
+            // Other keys except icon/content are children too
             const extra = {};
             for (const subKey in item) {
               if (!['icon', 'content'].includes(subKey)) {
                 extra[subKey] = item[subKey];
               }
             }
-            if (Object.keys(extra).length > 0) {
+            if (Object.keys(extra).length) {
               children = extra;
             }
           }
         }
 
+        // If has children, add caret icon and submenu ul
         if (children) {
-          buildMenu(children, li);
+          const caret = document.createElement('svg');
+          caret.setAttribute('viewBox', '0 0 20 20');
+          caret.className = "w-4 h-4 text-gray-500 transition-transform duration-200";
+          caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
+          header.appendChild(caret);
+
+          const submenu = document.createElement('ul');
+          submenu.className = "pl-4 mt-1 space-y-1 hidden";
+
+          // Toggle submenu on header click (except if it’s a page)
+          header.addEventListener('click', () => {
+            if (hasPage) {
+              loadMarkdown(mdPath);
+            } else {
+              const isHidden = submenu.classList.contains('hidden');
+              submenu.classList.toggle('hidden');
+              caret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+          });
+
+          buildMenu(children, submenu);
+          li.appendChild(header);
+          li.appendChild(submenu);
+
+        } else {
+          // No children
+          if (hasPage) {
+            header.addEventListener('click', () => loadMarkdown(mdPath));
+            header.classList.add('hover:bg-gray-200', 'cursor-pointer');
+          } else {
+            // Just plain label no click
+            header.style.cursor = 'default';
+          }
+          li.appendChild(header);
         }
 
-        li.appendChild(span);
         ul.appendChild(li);
-      }
+      });
 
       container.appendChild(ul);
     }
 
     async function loadMarkdown(file) {
-      const response = await fetch(`docs/${file}`);
-      const md = await response.text();
-      document.getElementById('content').innerHTML = marked.parse(md);
+      try {
+        const res = await fetch(`docs/${file}`);
+        if (!res.ok) {
+          document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur de chargement : ${res.status}</p>`;
+          return;
+        }
+        const md = await res.text();
+        document.getElementById('content').innerHTML = marked.parse(md);
+      } catch (e) {
+        document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur : ${e.message}</p>`;
+      }
     }
 
     init();

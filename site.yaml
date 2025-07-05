@@ -14,10 +14,10 @@ content:
         content: projetB.md
       projetC:
         debut:
-          icon: projB.svg
-          content: projetB.md
+          icon: debut.svg
+          content: debut.md
         fin:
-          icon: projB.svg
-          content: projetB.md
+          icon: fin.svg
+          content: fin.md
   mon parcours:
     content: parcours.md
