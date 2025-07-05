@@ -35,26 +35,33 @@
         const ul = document.createElement('ul');
 
         for (const [section, sectionData] of Object.entries(site.content)) {
-          const li = document.createElement('li');
-          const link = document.createElement('a');
-          link.href = `#${encodeURIComponent(section)}`;
-          link.textContent = section;
-          li.appendChild(link);
-          ul.appendChild(li);
+  const li = document.createElement('li');
+  const link = document.createElement('a');
+  link.href = `#${encodeURIComponent(section)}`;
+  link.textContent = section;
+  li.appendChild(link);
 
-          // Sous-pages ?
-          if (sectionData.content && typeof sectionData.content === 'object' && !sectionData.content.endsWith('.md')) {
-            const subUl = document.createElement('ul');
-            for (const [sub, subData] of Object.entries(sectionData.content)) {
-              const subLi = document.createElement('li');
-              const subLink = document.createElement('a');
-              subLink.href = `#${encodeURIComponent(section)}/${encodeURIComponent(sub)}`;
-              subLink.textContent = sub;
-              subLi.appendChild(subLink);
-              subUl.appendChild(subLi);
-            }
-            li.appendChild(subUl);
-          }
+  // Vérifie : est-ce que c’est une sous-arborescence ?
+  if (
+    sectionData.content &&
+    typeof sectionData.content === 'object' &&
+    !Array.isArray(sectionData.content)
+  ) {
+    const subUl = document.createElement('ul');
+    for (const [sub, subData] of Object.entries(sectionData.content)) {
+      const subLi = document.createElement('li');
+      const subLink = document.createElement('a');
+      subLink.href = `#${encodeURIComponent(section)}/${encodeURIComponent(sub)}`;
+      subLink.textContent = sub;
+      subLi.appendChild(subLink);
+      subUl.appendChild(subLi);
+    }
+    li.appendChild(subUl);
+  }
+
+  ul.appendChild(li);
+}
+
         }
         nav.appendChild(ul);
 
