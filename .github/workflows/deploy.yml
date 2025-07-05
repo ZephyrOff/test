@@ -30,7 +30,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Si tu utilises des libs type PyYAML etc.
-          # pip install pyyaml
+          pip install pyyaml
 
       # Exécute ton script pour générer le fichier
       - name: Generate search index
