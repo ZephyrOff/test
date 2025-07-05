@@ -9,37 +9,49 @@
 </head>
 <body class="h-full flex overflow-hidden">
 
+  <!-- Toggle button hors sidebar, en fixed top-left -->
+  <button id="toggleSidebar" 
+    class="fixed top-2 left-2 z-50 p-2 bg-white border border-gray-300 rounded shadow hover:bg-gray-100 focus:outline-none"
+    aria-label="Toggle sidebar">
+    &#9776;
+  </button>
+
   <!-- Sidebar -->
-  <nav id="sidebar" class="bg-white border-r border-gray-300 h-full flex flex-col transition-width duration-300 w-64">
-
-    <!-- Toggle button -->
-    <button id="toggleSidebar" 
-      class="p-2 border-b border-gray-300 focus:outline-none hover:bg-gray-100"
-      aria-label="Toggle sidebar">
-      &#9776;
-    </button>
-
+  <nav id="sidebar" class="bg-white border-r border-gray-300 h-full flex flex-col transition-all duration-300 w-64">
     <!-- Menu container -->
     <div id="menuContainer" class="overflow-y-auto flex-1 px-2 py-4"></div>
   </nav>
 
   <!-- Content -->
-  <main id="content" class="flex-1 p-6 overflow-auto">
+  <main id="content" class="flex-1 p-6 overflow-auto ml-0 transition-margin duration-300">
     <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
     <p>Choisissez une page dans le menu.</p>
   </main>
 
   <script>
-    // Sidebar toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggleSidebar');
-    toggleBtn.addEventListener('click', () => {
-      if (sidebar.style.width === '4rem') {
-        sidebar.style.width = '16rem'; // 64 = 16rem
+    const content = document.getElementById('content');
+
+    // Sidebar state
+    let sidebarOpen = true;
+
+    function updateLayout() {
+      if(sidebarOpen) {
+        sidebar.style.display = 'flex';
+        content.style.marginLeft = '16rem'; // 64 = 16rem
       } else {
-        sidebar.style.width = '4rem';
+        sidebar.style.display = 'none';
+        content.style.marginLeft = '0';
       }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      sidebarOpen = !sidebarOpen;
+      updateLayout();
     });
+
+    updateLayout();
 
     // Load site.json and build menu
     async function init() {
@@ -60,66 +72,81 @@
         const item = node[key];
         const li = document.createElement('li');
 
-        // Create header container (flex for label + caret)
-        const header = document.createElement('div');
-        header.className = "flex items-center justify-between cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-100";
-
-        const label = document.createElement('span');
-        label.textContent = key;
-        label.className = "text-gray-800";
-
-        header.appendChild(label);
-
-        // Check if this node is a page (content .md)
-        let hasPage = false;
-        let children = null;
+        // Determine if page or folder
+        let isPage = false;
         let mdPath = null;
+        let children = null;
 
         if (typeof item === 'string' && item.endsWith('.md')) {
-          hasPage = true;
+          isPage = true;
           mdPath = item;
         } else if (typeof item === 'object') {
           if (typeof item.content === 'string' && item.content.endsWith('.md')) {
-            hasPage = true;
+            isPage = true;
             mdPath = item.content;
           }
 
-          // Determine children for submenu
+          // children could be in content or other keys
           if (typeof item.content === 'object') {
             children = item.content;
           } else {
-            // Other keys except icon/content are children too
+            // collect keys except icon and content
             const extra = {};
-            for (const subKey in item) {
-              if (!['icon', 'content'].includes(subKey)) {
-                extra[subKey] = item[subKey];
-              }
+            for (const k in item) {
+              if (!['icon', 'content'].includes(k)) extra[k] = item[k];
             }
-            if (Object.keys(extra).length) {
-              children = extra;
-            }
+            if (Object.keys(extra).length) children = extra;
           }
         }
 
-        // If has children, add caret icon and submenu ul
-        if (children) {
-          const caret = document.createElement('svg');
-          caret.setAttribute('viewBox', '0 0 20 20');
-          caret.className = "w-4 h-4 text-gray-500 transition-transform duration-200";
+        const header = document.createElement('div');
+        header.className = "flex items-center justify-between cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-100";
+
+        // Left part: caret for folder, else spacer
+        const leftSpan = document.createElement('span');
+        leftSpan.className = "mr-2 flex items-center justify-center w-4 h-4";
+
+        if(children) {
+          // Caret SVG for folder
+          const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          caret.setAttribute("viewBox", "0 0 20 20");
+          caret.classList.add("w-4","h-4","text-gray-500","transition-transform","duration-200");
           caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
-          header.appendChild(caret);
+          leftSpan.appendChild(caret);
+        } else {
+          // Empty placeholder to align text
+          leftSpan.innerHTML = "&nbsp;";
+        }
 
+        header.appendChild(leftSpan);
+
+        // Label text
+        const label = document.createElement('span');
+        label.textContent = key;
+        label.className = "text-gray-800 flex-1";
+
+        header.appendChild(label);
+
+        // If folder, add right spacer (to balance caret)
+        if(children) {
+          const rightSpacer = document.createElement('span');
+          rightSpacer.className = "w-4 h-4";
+          header.appendChild(rightSpacer);
+        }
+
+        if(children) {
+          // Folder with submenu
           const submenu = document.createElement('ul');
-          submenu.className = "pl-4 mt-1 space-y-1 hidden";
+          submenu.className = "pl-6 mt-1 space-y-1 hidden";
 
-          // Toggle submenu on header click (except if it’s a page)
+          // Toggle submenu on header click (not page)
           header.addEventListener('click', () => {
-            if (hasPage) {
-              loadMarkdown(mdPath);
-            } else {
-              const isHidden = submenu.classList.contains('hidden');
-              submenu.classList.toggle('hidden');
-              caret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+            const isHidden = submenu.classList.contains('hidden');
+            submenu.classList.toggle('hidden');
+            // rotate caret
+            const svgCaret = leftSpan.querySelector('svg');
+            if(svgCaret) {
+              svgCaret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
             }
           });
 
@@ -127,19 +154,18 @@
           li.appendChild(header);
           li.appendChild(submenu);
 
+        } else if(isPage) {
+          // Page item, load markdown on click
+          header.addEventListener('click', () => loadMarkdown(mdPath));
+          header.classList.add('hover:bg-gray-200', 'cursor-pointer');
+          li.appendChild(header);
         } else {
-          // No children
-          if (hasPage) {
-            header.addEventListener('click', () => loadMarkdown(mdPath));
-            header.classList.add('hover:bg-gray-200', 'cursor-pointer');
-          } else {
-            // Just plain label no click
-            header.style.cursor = 'default';
-          }
+          // Plain label
+          header.style.cursor = 'default';
           li.appendChild(header);
         }
 
-        ul.appendChild(li);
+        container.appendChild(li);
       });
 
       container.appendChild(ul);
@@ -161,5 +187,6 @@
 
     init();
   </script>
+
 </body>
 </html>
