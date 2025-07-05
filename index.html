@@ -3,190 +3,197 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mon Site Tailwind</title>
+  <title>Menu déployable Tailwind Responsive</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-</head>
-<body class="h-full flex overflow-hidden">
-
-  <!-- Toggle button hors sidebar, en fixed top-left -->
-  <button id="toggleSidebar" 
-    class="fixed top-2 left-2 z-50 p-2 bg-white border border-gray-300 rounded shadow hover:bg-gray-100 focus:outline-none"
-    aria-label="Toggle sidebar">
-    &#9776;
-  </button>
-
-  <!-- Sidebar -->
-  <nav id="sidebar" class="bg-white border-r border-gray-300 h-full flex flex-col transition-all duration-300 w-64">
-    <!-- Menu container -->
-    <div id="menuContainer" class="overflow-y-auto flex-1 px-2 py-4"></div>
-  </nav>
-
-  <!-- Content -->
-  <main id="content" class="flex-1 p-6 overflow-auto ml-0 transition-margin duration-300">
-    <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
-    <p>Choisissez une page dans le menu.</p>
-  </main>
-
-  <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const content = document.getElementById('content');
-
-    // Sidebar state
-    let sidebarOpen = true;
-
-    function updateLayout() {
-      if(sidebarOpen) {
-        sidebar.style.display = 'flex';
-        content.style.marginLeft = '16rem'; // 64 = 16rem
-      } else {
-        sidebar.style.display = 'none';
-        content.style.marginLeft = '0';
-      }
+  <style>
+    /* Animation pour ouvrir/fermer submenu */
+    .submenu-enter {
+      max-height: 0;
+      transition: max-height 0.3s ease;
+      overflow: hidden;
     }
+    .submenu-enter-active {
+      max-height: 1000px; /* assez grand pour l'animation */
+    }
+    .submenu-leave {
+      max-height: 1000px;
+      transition: max-height 0.3s ease;
+    }
+    .submenu-leave-active {
+      max-height: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col">
 
-    toggleBtn.addEventListener('click', () => {
-      sidebarOpen = !sidebarOpen;
-      updateLayout();
+  <div class="flex h-full">
+    <!-- Sidebar desktop -->
+    <nav id="sidebar" class="hidden md:flex flex-col w-64 bg-white border-r border-gray-300 overflow-y-auto">
+      <div class="p-4 text-xl font-semibold border-b border-gray-300">Menu</div>
+      <div id="menuContainer" class="flex-1 px-2 py-4"></div>
+    </nav>
+
+    <!-- Sidebar mobile overlay -->
+    <div id="mobileSidebar" class="fixed inset-0 z-40 hidden md:hidden">
+      <div class="absolute inset-0 bg-black bg-opacity-50" onclick="toggleSidebar(false)"></div>
+      <nav class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg p-4 overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="text-xl font-semibold border-b border-gray-300 mb-4">Menu</div>
+        <div id="mobileMenuContainer"></div>
+      </nav>
+    </div>
+
+    <!-- Main content -->
+    <main id="content" class="flex-1 p-6 overflow-auto">
+      <button class="md:hidden mb-4 px-3 py-2 bg-gray-200 rounded" onclick="toggleSidebar()">
+        ☰ Menu
+      </button>
+      <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
+      <p>Choisissez une page dans le menu.</p>
+    </main>
+  </div>
+
+<script>
+  let sidebarOpen = false;
+
+  function toggleSidebar(force) {
+    sidebarOpen = force !== undefined ? force : !sidebarOpen;
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    if(sidebarOpen) {
+      mobileSidebar.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // bloquer scroll derrière
+    } else {
+      mobileSidebar.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Construire le menu à partir de la structure (idéalement site.json)
+  async function init() {
+    const res = await fetch('site.json');
+    const data = await res.json();
+
+    buildMenu(data.content || data, document.getElementById('menuContainer'), false);
+    buildMenu(data.content || data, document.getElementById('mobileMenuContainer'), true);
+  }
+
+  // Construire le menu, recursive
+  function buildMenu(node, container, isMobile) {
+    const ul = document.createElement('ul');
+    ul.className = "space-y-1";
+
+    Object.keys(node).forEach(key => {
+      if(['icon','search','theme'].includes(key)) return;
+
+      const item = node[key];
+
+      // Est-ce une page ? (content string avec .md)
+      let isPage = false;
+      let mdPath = null;
+      let children = null;
+
+      if(typeof item === 'string' && item.endsWith('.md')) {
+        isPage = true;
+        mdPath = item;
+      } else if(typeof item === 'object') {
+        if(typeof item.content === 'string' && item.content.endsWith('.md')) {
+          isPage = true;
+          mdPath = item.content;
+        }
+
+        if(typeof item.content === 'object') {
+          children = item.content;
+        } else {
+          // récupérer autres clés sauf icon et content
+          const extras = {};
+          for(const k in item) {
+            if(!['icon','content'].includes(k)) extras[k] = item[k];
+          }
+          if(Object.keys(extras).length) children = extras;
+        }
+      }
+
+      const li = document.createElement('li');
+      li.className = "select-none";
+
+      const header = document.createElement('div');
+      header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
+
+      // Label
+      const label = document.createElement('span');
+      label.textContent = key;
+      label.className = "text-gray-800";
+
+      // Pour dossiers, ajouter caret qui tourne
+      if(children) {
+        header.classList.add("cursor-pointer");
+
+        const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        caret.setAttribute("viewBox", "0 0 20 20");
+        caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
+        caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
+        header.appendChild(label);
+        header.appendChild(caret);
+
+        // Sous-menu caché par défaut
+        const submenu = document.createElement('ul');
+        submenu.className = "pl-6 mt-1 space-y-1 hidden";
+
+        header.addEventListener('click', () => {
+          const isHidden = submenu.classList.contains('hidden');
+          if(isHidden) {
+            submenu.classList.remove('hidden');
+            caret.style.transform = 'rotate(90deg)';
+          } else {
+            submenu.classList.add('hidden');
+            caret.style.transform = 'rotate(0deg)';
+          }
+        });
+
+        buildMenu(children, submenu, isMobile);
+        li.appendChild(header);
+        li.appendChild(submenu);
+
+      } else if(isPage) {
+        // Page, clic charge markdown
+        header.classList.add("cursor-pointer", "hover:bg-gray-200");
+        header.appendChild(label);
+        header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
+        li.appendChild(header);
+
+      } else {
+        // Simple label
+        header.appendChild(label);
+        li.appendChild(header);
+      }
+
+      ul.appendChild(li);
     });
 
-    updateLayout();
+    container.appendChild(ul);
+  }
 
-    // Load site.json and build menu
-    async function init() {
-      const res = await fetch('site.json');
-      const data = await res.json();
-      const menuContainer = document.getElementById('menuContainer');
-      menuContainer.innerHTML = '';
-      buildMenu(data.content || data, menuContainer);
-    }
-
-    function buildMenu(node, container) {
-      const ul = document.createElement('ul');
-      ul.className = "space-y-1";
-
-      Object.keys(node).forEach(key => {
-        if (['icon', 'search', 'theme'].includes(key)) return;
-
-        const item = node[key];
-        const li = document.createElement('li');
-
-        // Determine if page or folder
-        let isPage = false;
-        let mdPath = null;
-        let children = null;
-
-        if (typeof item === 'string' && item.endsWith('.md')) {
-          isPage = true;
-          mdPath = item;
-        } else if (typeof item === 'object') {
-          if (typeof item.content === 'string' && item.content.endsWith('.md')) {
-            isPage = true;
-            mdPath = item.content;
-          }
-
-          // children could be in content or other keys
-          if (typeof item.content === 'object') {
-            children = item.content;
-          } else {
-            // collect keys except icon and content
-            const extra = {};
-            for (const k in item) {
-              if (!['icon', 'content'].includes(k)) extra[k] = item[k];
-            }
-            if (Object.keys(extra).length) children = extra;
-          }
-        }
-
-        const header = document.createElement('div');
-        header.className = "flex items-center justify-between cursor-pointer select-none py-1 px-2 rounded hover:bg-gray-100";
-
-        // Left part: caret for folder, else spacer
-        const leftSpan = document.createElement('span');
-        leftSpan.className = "mr-2 flex items-center justify-center w-4 h-4";
-
-        if(children) {
-          // Caret SVG for folder
-          const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          caret.setAttribute("viewBox", "0 0 20 20");
-          caret.classList.add("w-4","h-4","text-gray-500","transition-transform","duration-200");
-          caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
-          leftSpan.appendChild(caret);
-        } else {
-          // Empty placeholder to align text
-          leftSpan.innerHTML = "&nbsp;";
-        }
-
-        header.appendChild(leftSpan);
-
-        // Label text
-        const label = document.createElement('span');
-        label.textContent = key;
-        label.className = "text-gray-800 flex-1";
-
-        header.appendChild(label);
-
-        // If folder, add right spacer (to balance caret)
-        if(children) {
-          const rightSpacer = document.createElement('span');
-          rightSpacer.className = "w-4 h-4";
-          header.appendChild(rightSpacer);
-        }
-
-        if(children) {
-          // Folder with submenu
-          const submenu = document.createElement('ul');
-          submenu.className = "pl-6 mt-1 space-y-1 hidden";
-
-          // Toggle submenu on header click (not page)
-          header.addEventListener('click', () => {
-            const isHidden = submenu.classList.contains('hidden');
-            submenu.classList.toggle('hidden');
-            // rotate caret
-            const svgCaret = leftSpan.querySelector('svg');
-            if(svgCaret) {
-              svgCaret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
-            }
-          });
-
-          buildMenu(children, submenu);
-          li.appendChild(header);
-          li.appendChild(submenu);
-
-        } else if(isPage) {
-          // Page item, load markdown on click
-          header.addEventListener('click', () => loadMarkdown(mdPath));
-          header.classList.add('hover:bg-gray-200', 'cursor-pointer');
-          li.appendChild(header);
-        } else {
-          // Plain label
-          header.style.cursor = 'default';
-          li.appendChild(header);
-        }
-
-        container.appendChild(li);
-      });
-
-      container.appendChild(ul);
-    }
-
-    async function loadMarkdown(file) {
-      try {
-        const res = await fetch(`docs/${file}`);
-        if (!res.ok) {
-          document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur de chargement : ${res.status}</p>`;
-          return;
-        }
-        const md = await res.text();
-        document.getElementById('content').innerHTML = marked.parse(md);
-      } catch (e) {
-        document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur : ${e.message}</p>`;
+  async function loadMarkdown(file, isMobile) {
+    try {
+      const res = await fetch('docs/' + file);
+      if(!res.ok) {
+        document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur de chargement : ${res.status}</p>`;
+        return;
       }
-    }
+      const md = await res.text();
+      document.getElementById('content').innerHTML = marked.parse(md);
 
-    init();
-  </script>
+      // Fermer sidebar mobile si ouvert
+      if(isMobile) toggleSidebar(false);
+
+    } catch(e) {
+      document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur : ${e.message}</p>`;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
 
 </body>
 </html>
