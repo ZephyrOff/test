@@ -10,28 +10,41 @@
       height: 100vh;
       margin: 0;
     }
+
     #sidebar {
       width: 250px;
       border-right: 1px solid #ccc;
       overflow-y: auto;
       padding: 1rem;
     }
+
     #content {
       flex: 1;
       padding: 2rem;
       overflow-y: auto;
     }
+
     ul {
       list-style: none;
       padding-left: 20px;
+      margin: 0;
     }
+
     li {
       margin: 5px 0;
+    }
+
+    li > span {
       cursor: pointer;
       color: blue;
     }
-    li:hover {
+
+    li > span:hover {
       text-decoration: underline;
+    }
+
+    li ul {
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -58,11 +71,18 @@
       for (const key in content) {
         const item = content[key];
         const li = document.createElement('li');
-        li.textContent = key;
+        const span = document.createElement('span');
+        span.textContent = key;
 
         if (typeof item === 'string' || (typeof item === 'object' && item.content && typeof item.content === 'string' && item.content.endsWith('.md'))) {
-          li.onclick = () => loadMarkdown(item.content || item);
-        } else if (typeof item === 'object' && item.content) {
+          // Feuille = fichier markdown
+          span.onclick = () => loadMarkdown(item.content || item);
+        }
+
+        li.appendChild(span);
+
+        if (typeof item === 'object' && item.content && typeof item.content !== 'string') {
+          // Noeud interne = sous-menu
           buildMenu(item.content, li);
         }
 
