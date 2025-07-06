@@ -1,156 +1,136 @@
-/* Obsidian_Nord Theme for rendered Markdown */
+/* ============================================
+   Obsidian_Nord - Simplified Markdown Theme
+   ============================================ */
 
 :root {
-  --color-bg: #2E3440;          /* Polar Night */
-  --color-bg-alt: #3B4252;
-  --color-panel: #434C5E;
-  --color-muted: #4C566A;
+  --dark0: #2e3440; /* Polar Night */
+  --dark1: #3b4252;
+  --dark2: #434c5e;
+  --dark3: #4c566a;
 
-  --color-text: #D8DEE9;
-  --color-text-light: #E5E9F0;
-  --color-text-bright: #ECEFF4;
+  --light0: #d8dee9; /* Snow Storm */
+  --light1: #e5e9f0;
+  --light2: #eceff4;
 
-  --color-accent: #88C0D0;      /* Frost Cyan */
-  --color-accent-2: #81A1C1;
-  --color-accent-3: #5E81AC;
-  --color-success: #A3BE8C;     /* Green accent */
-  --color-danger: #BF616A;      /* Aurora red */
+  --frost0: #8fbcbb;
+  --frost1: #88c0d0;
+  --frost2: #81a1c1;
+  --frost3: #5e81ac;
+
+  --red: #bf616a;
+  --orange: #d08770;
+  --yellow: #ebcb8b;
+  --green: #a3be8c;
+  --purple: #b48ead;
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background: var(--dark0);
+  color: var(--light2);
   font-family: system-ui, sans-serif;
-  line-height: 1.6;
-  margin: 0;
+  line-height: 1.7;
   padding: 2rem;
 }
 
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--color-text-bright);
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  font-weight: 600;
+h1 {
+  color: var(--red);
+  border-bottom: 2px solid var(--dark2);
 }
 
-h1 { font-size: 2rem; border-bottom: 2px solid var(--color-panel); padding-bottom: 0.3em; }
-h2 { font-size: 1.75rem; border-bottom: 1px solid var(--color-panel); padding-bottom: 0.2em; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.1rem; }
-h6 { font-size: 1rem; color: var(--color-muted); }
+h2 { color: var(--yellow); }
+h3 { color: var(--green); }
+h4 { color: var(--purple); }
+h5 { color: var(--frost0); }
+h6 { color: var(--frost2); }
 
-/* Paragraphs */
-p {
-  margin: 0.8em 0;
-}
-
-/* Links */
 a {
-  color: var(--color-accent);
+  color: var(--frost1);
   text-decoration: underline;
 }
 
 a:hover {
-  color: var(--color-accent-2);
+  color: var(--frost2);
 }
 
-/* Lists */
-ul, ol {
+p {
   margin: 1em 0;
-  padding-left: 2em;
 }
 
-li {
-  margin: 0.5em 0;
+blockquote {
+  border-left: 4px solid var(--frost1);
+  background: var(--dark1);
+  padding: 0.8em 1em;
+  color: var(--light1);
 }
 
-/* Code blocks */
+code {
+  background: var(--dark2);
+  color: var(--frost2);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
 pre {
-  background-color: var(--color-bg-alt);
-  color: var(--color-text-bright);
+  background: var(--dark1);
+  color: var(--light2);
   padding: 1em;
   border-radius: 6px;
   overflow-x: auto;
 }
 
-code {
-  background-color: var(--color-bg-alt);
-  color: var(--color-accent-2);
-  padding: 0.2em 0.4em;
-  border-radius: 4px;
-}
-
-/* Blockquotes */
-blockquote {
-  border-left: 4px solid var(--color-accent);
-  padding-left: 1em;
-  margin: 1em 0;
-  color: var(--color-text-light);
-  background-color: var(--color-bg-alt);
-}
-
-/* Tables */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1em 0;
+  margin: 1.5em 0;
 }
 
-table thead {
-  background-color: var(--color-panel);
+th {
+  background: var(--dark2);
+  color: var(--light2);
+  text-align: left;
+  padding: 0.5em;
 }
 
-table th,
-table td {
-  border: 1px solid var(--color-muted);
-  padding: 0.5em 1em;
+td {
+  border-top: 1px solid var(--dark3);
+  padding: 0.5em;
 }
 
-table tr:nth-child(even) {
-  background-color: var(--color-bg-alt);
+tr:nth-child(even) {
+  background: var(--dark1);
 }
 
-/* Horizontal Rule */
 hr {
   border: none;
-  border-top: 1px solid var(--color-panel);
+  border-top: 1px solid var(--dark3);
   margin: 2em 0;
 }
 
-/* Images */
-img {
-  max-width: 100%;
-  border-radius: 8px;
-}
-
-/* Inline strong/em/strikethrough */
 strong {
-  color: var(--color-text-bright);
+  color: var(--yellow);
   font-weight: bold;
 }
 
 em {
-  font-style: italic;
+  color: var(--orange);
 }
 
-del {
-  text-decoration: line-through;
-  color: var(--color-muted);
-}
-
-/* Details/Summary (for collapsible blocks) */
-details {
-  background: var(--color-bg-alt);
-  border: 1px solid var(--color-panel);
-  border-radius: 6px;
-  padding: 1em;
+ul, ol {
+  padding-left: 2em;
   margin: 1em 0;
 }
 
-summary {
-  cursor: pointer;
-  font-weight: 600;
+li {
+  margin: 0.3em 0;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+.mark {
+  background: var(--yellow);
+  color: var(--dark0);
 }
 
