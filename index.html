@@ -155,12 +155,22 @@
     container.appendChild(ul);
   }
 
+  function preprocessMarkdown(markdownText) {
+      const obsidianLinkRegex = /\[\[([^|\]]+)\|?([^|\]]*)\]\]/g;
+      return markdownText.replace(obsidianLinkRegex, (_, linkPath, linkName) => {
+          const encodedPath = encodeURIComponent(linkPath);
+          const displayName = linkName || linkPath;
+          return `<a onclick="handleInternalLinkClick('${encodedPath}'); return false;">${displayName}</a>`;
+      });
+  }
+
   async function loadMarkdown(file, isMobile) {
     const res = await fetch('docs/' + file);
     const md = await res.text();
     console.log(md);
     console.log(marked.parse(md));
-    document.getElementById('content').innerHTML = marked.parse(md);
+    const preprocessed = preprocessMarkdown(md);
+    document.getElementById('content').innerHTML = marked.parse(preprocessed);
     if (isMobile) toggleSidebarMobile(false);
   }
 
