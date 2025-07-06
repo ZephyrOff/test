@@ -81,84 +81,103 @@
   }
 
   function buildMenu(node, container, isMobile) {
-    const ul = document.createElement('ul');
-    ul.className = "space-y-1";
+  const ul = document.createElement('ul');
+  ul.className = "space-y-1";
 
-    for (const key of Object.keys(node)) {
-      if (['icon', 'search', 'theme'].includes(key)) continue;
+  for (const key of Object.keys(node)) {
+    if (['search', 'theme'].includes(key)) continue;
 
-      const item = node[key];
-      let isPage = false;
-      let mdPath = null;
-      let children = null;
+    const item = node[key];
+    let isPage = false;
+    let mdPath = null;
+    let children = null;
+    let iconHTML = null;
 
-      if (typeof item === 'string' && item.endsWith('.md')) {
-        isPage = true;
-        mdPath = item;
-      } else if (typeof item === 'object') {
-        if (typeof item.content === 'string' && item.content.endsWith('.md')) {
-          isPage = true;
-          mdPath = item.content;
-        } else if (typeof item.content === 'object') {
-          children = item.content;
-        } else {
-          const extras = {};
-          for (const k in item) {
-            if (!['icon', 'content'].includes(k)) extras[k] = item[k];
-          }
-          if (Object.keys(extras).length) children = extras;
-        }
-      }
-
-      const li = document.createElement('li');
-      const header = document.createElement('div');
-      header.className = "flex items-center justify-between px-2 py-1 rounded";
-      // Conteneur flexible : icône + texte
-      const labelWrapper = document.createElement('div');
-      labelWrapper.className = "flex items-center gap-2"; // espace entre icône et texte
-
-      // Ajoute l'icône si présente
-      if (item.icon) {
-        const iconContainer = document.createElement('span');
-        iconContainer.innerHTML = item.icon; // ton SVG inline ou balise <i>...
-        iconContainer.className = "w-4 h-4"; // ajuste la taille si nécessaire
-        labelWrapper.appendChild(iconContainer);
-      }
-
-      // Ajoute le texte
-      const label = document.createElement('span');
-      label.textContent = key;
-      labelWrapper.appendChild(label);
-
-      if (children) {
-        header.classList.add("cursor-pointer");
-
-        const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        caret.setAttribute("viewBox", "0 0 20 20");
-        caret.classList.add("w-4", "h-4", "transition-transform", "duration-200");
-        caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
-
-        header.appendChild(labelWrapper);
-        header.appendChild(caret);
-
-        const submenu = document.createElement('ul');
-        submenu.className = "pl-4 mt-1 space-y-1 hidden";
-
-        header.addEventListener('click', () => {
-          const hidden = submenu.classList.contains('hidden');
-          submenu.classList.toggle('hidden', !hidden);
-          caret.style.transform = hidden ? 'rotate(90deg)' : 'rotate(0deg)';
-        });
-
-        buildMenu(children, submenu, isMobile);
-        li.appendChild(header);
-        li.appendChild(submenu);
-      }
-
-      ul.appendChild(li);
+    // 1️⃣ Détecter l'icône si présente
+    if (typeof item === 'object' && item.icon) {
+      iconHTML = item.icon;
     }
-    container.appendChild(ul);
+
+    // 2️⃣ Vérifier si c’est une page ou un sous-menu
+    if (typeof item === 'string' && item.endsWith('.md')) {
+      isPage = true;
+      mdPath = item;
+    } else if (typeof item === 'object') {
+      if (typeof item.content === 'string' && item.content.endsWith('.md')) {
+        isPage = true;
+        mdPath = item.content;
+      } else if (typeof item.content === 'object') {
+        children = item.content;
+      } else {
+        const extras = {};
+        for (const k in item) {
+          if (!['icon', 'content'].includes(k)) extras[k] = item[k];
+        }
+        if (Object.keys(extras).length) children = extras;
+      }
+    }
+
+    // 3️⃣ Création du li
+    const li = document.createElement('li');
+    const header = document.createElement('div');
+    header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
+
+    // Conteneur icône + label
+    const labelWrapper = document.createElement('div');
+    labelWrapper.className = "flex items-center gap-2";
+
+    if (iconHTML) {
+      const iconSpan = document.createElement('span');
+      iconSpan.innerHTML = iconHTML; // SVG inline
+      iconSpan.className = "w-4 h-4 inline-block";
+      labelWrapper.appendChild(iconSpan);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = key;
+    labelWrapper.appendChild(label);
+
+    // Gestion sous-menu
+    if (children) {
+      header.classList.add("cursor-pointer");
+
+      const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      caret.setAttribute("viewBox", "0 0 20 20");
+      caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
+      caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
+
+      header.appendChild(labelWrapper);
+      header.appendChild(caret);
+
+      const submenu = document.createElement('ul');
+      submenu.className = "pl-4 mt-1 space-y-1 hidden";
+
+      header.addEventListener('click', () => {
+        const hidden = submenu.classList.contains('hidden');
+        submenu.classList.toggle('hidden', !hidden);
+        caret.style.transform = hidden ? 'rotate(90deg)' : 'rotate(0deg)';
+      });
+
+      buildMenu(children, submenu, isMobile);
+      li.appendChild(header);
+      li.appendChild(submenu);
+
+    } else if (isPage) {
+      header.classList.add("cursor-pointer");
+      header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
+      header.appendChild(labelWrapper);
+      li.appendChild(header);
+
+    } else {
+      header.appendChild(labelWrapper);
+      li.appendChild(header);
+    }
+
+    ul.appendChild(li);
   }
+  container.appendChild(ul);
+}
+
 
   function preprocessMarkdown(markdownText) {
       const obsidianLinkRegex = /\[\[([^|\]]+)\|?([^|\]]*)\]\]/g;
