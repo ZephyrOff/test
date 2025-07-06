@@ -193,9 +193,8 @@
   async function loadMarkdown(file, isMobile) {
     const res = await fetch('docs/' + file);
     const md = await res.text();
-    console.log(md);
-    console.log(marked.parse(md));
-    const { content } = parseMetadataJS(preprocessed)
+
+    const { content } = parseMetadataJS(md)
     const preprocessed = preprocessMarkdown(content);
     document.getElementById('content').innerHTML = marked.parse(preprocessed);
     Prism.highlightAll();
