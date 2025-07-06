@@ -3,73 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Menu déployable Tailwind Responsive</title>
+  <title>Site avec Sidebar Déployable</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    /* Animation pour ouvrir/fermer submenu */
-    .submenu-enter {
-      max-height: 0;
-      transition: max-height 0.3s ease;
-      overflow: hidden;
-    }
-    .submenu-enter-active {
-      max-height: 1000px; /* assez grand pour l'animation */
-    }
-    .submenu-leave {
-      max-height: 1000px;
-      transition: max-height 0.3s ease;
-    }
-    .submenu-leave-active {
-      max-height: 0;
-      overflow: hidden;
-    }
-  </style>
 </head>
 <body class="h-full flex flex-col">
 
-  <div class="flex h-full">
-    <!-- Sidebar desktop -->
-    <nav id="sidebar" class="hidden md:flex flex-col w-64 bg-white border-r border-gray-300 overflow-y-auto">
-      <div class="p-4 text-xl font-semibold border-b border-gray-300">Menu</div>
-      <div id="menuContainer" class="flex-1 px-2 py-4"></div>
-    </nav>
-
-    <!-- Sidebar mobile overlay -->
-    <div id="mobileSidebar" class="fixed inset-0 z-40 hidden md:hidden">
-      <div class="absolute inset-0 bg-black bg-opacity-50" onclick="toggleSidebar(false)"></div>
-      <nav class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg p-4 overflow-y-auto" onclick="event.stopPropagation()">
-        <div class="text-xl font-semibold border-b border-gray-300 mb-4">Menu</div>
-        <div id="mobileMenuContainer"></div>
-      </nav>
+<div class="flex h-full">
+  <!-- Sidebar -->
+  <nav id="sidebar" class="hidden md:flex flex-col w-64 bg-white border-r border-gray-300 overflow-y-auto transition-all duration-300">
+    <div class="p-4 flex justify-between items-center border-b border-gray-300">
+      <span class="text-xl font-semibold">Menu</span>
+      <button onclick="toggleSidebarDesktop()" class="text-gray-600 hover:text-gray-900">←</button>
     </div>
+    <div id="menuContainer" class="flex-1 px-2 py-4"></div>
+  </nav>
 
-    <!-- Main content -->
-    <main id="content" class="flex-1 p-6 overflow-auto">
-      <button class="md:hidden mb-4 px-3 py-2 bg-gray-200 rounded" onclick="toggleSidebar()">
-        ☰ Menu
-      </button>
-      <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
-      <p>Choisissez une page dans le menu.</p>
-    </main>
+  <!-- Sidebar mobile overlay -->
+  <div id="mobileSidebar" class="fixed inset-0 z-40 hidden md:hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50" onclick="toggleSidebarMobile(false)"></div>
+    <nav class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg p-4 overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <span class="text-xl font-semibold">Menu</span>
+        <button onclick="toggleSidebarMobile(false)">✕</button>
+      </div>
+      <div id="mobileMenuContainer"></div>
+    </nav>
   </div>
 
-<script>
-  let sidebarOpen = false;
+  <!-- Main content -->
+  <main id="content" class="flex-1 p-6 overflow-auto transition-all duration-300">
+    <!-- Bouton pour ouvrir sidebar mobile & desktop -->
+    <button id="sidebarToggleBtn"
+            class="mb-4 px-3 py-2 bg-gray-200 rounded md:hidden"
+            onclick="toggleSidebarMobile()">
+      ☰ Menu
+    </button>
+    <button id="sidebarOpenBtn"
+            class="hidden md:inline-block mb-4 px-3 py-2 bg-gray-200 rounded"
+            onclick="toggleSidebarDesktop(true)">
+      ☰ Menu
+    </button>
 
-  function toggleSidebar(force) {
-    sidebarOpen = force !== undefined ? force : !sidebarOpen;
-    const mobileSidebar = document.getElementById('mobileSidebar');
-    if(sidebarOpen) {
-      mobileSidebar.classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // bloquer scroll derrière
+    <h1 class="text-2xl font-bold mb-4">Bienvenue</h1>
+    <p>Choisissez une page dans le menu.</p>
+  </main>
+</div>
+
+<script>
+  let sidebarOpenMobile = false;
+  let sidebarOpenDesktop = true;
+
+  function toggleSidebarMobile(force) {
+    sidebarOpenMobile = force !== undefined ? force : !sidebarOpenMobile;
+    const sidebar = document.getElementById('mobileSidebar');
+    sidebar.classList.toggle('hidden', !sidebarOpenMobile);
+    document.body.style.overflow = sidebarOpenMobile ? 'hidden' : '';
+  }
+
+  function toggleSidebarDesktop(force) {
+    const sidebar = document.getElementById('sidebar');
+    const openBtn = document.getElementById('sidebarOpenBtn');
+    sidebarOpenDesktop = force !== undefined ? force : !sidebarOpenDesktop;
+
+    if (sidebarOpenDesktop) {
+      sidebar.classList.remove('hidden');
+      openBtn.classList.add('hidden');
     } else {
-      mobileSidebar.classList.add('hidden');
-      document.body.style.overflow = '';
+      sidebar.classList.add('hidden');
+      openBtn.classList.remove('hidden');
     }
   }
 
-  // Construire le menu à partir de la structure (idéalement site.json)
   async function init() {
     const res = await fetch('site.json');
     const data = await res.json();
@@ -78,7 +83,6 @@
     buildMenu(data.content || data, document.getElementById('mobileMenuContainer'), true);
   }
 
-  // Construire le menu, recursive
   function buildMenu(node, container, isMobile) {
     const ul = document.createElement('ul');
     ul.className = "space-y-1";
@@ -87,8 +91,6 @@
       if(['icon','search','theme'].includes(key)) return;
 
       const item = node[key];
-
-      // Est-ce une page ? (content string avec .md)
       let isPage = false;
       let mdPath = null;
       let children = null;
@@ -105,7 +107,6 @@
         if(typeof item.content === 'object') {
           children = item.content;
         } else {
-          // récupérer autres clés sauf icon et content
           const extras = {};
           for(const k in item) {
             if(!['icon','content'].includes(k)) extras[k] = item[k];
@@ -120,12 +121,10 @@
       const header = document.createElement('div');
       header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
 
-      // Label
       const label = document.createElement('span');
       label.textContent = key;
       label.className = "text-gray-800";
 
-      // Pour dossiers, ajouter caret qui tourne
       if(children) {
         header.classList.add("cursor-pointer");
 
@@ -133,22 +132,17 @@
         caret.setAttribute("viewBox", "0 0 20 20");
         caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
         caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
+
         header.appendChild(label);
         header.appendChild(caret);
 
-        // Sous-menu caché par défaut
         const submenu = document.createElement('ul');
         submenu.className = "pl-6 mt-1 space-y-1 hidden";
 
         header.addEventListener('click', () => {
           const isHidden = submenu.classList.contains('hidden');
-          if(isHidden) {
-            submenu.classList.remove('hidden');
-            caret.style.transform = 'rotate(90deg)';
-          } else {
-            submenu.classList.add('hidden');
-            caret.style.transform = 'rotate(0deg)';
-          }
+          submenu.classList.toggle('hidden', !isHidden);
+          caret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
         });
 
         buildMenu(children, submenu, isMobile);
@@ -156,14 +150,11 @@
         li.appendChild(submenu);
 
       } else if(isPage) {
-        // Page, clic charge markdown
         header.classList.add("cursor-pointer", "hover:bg-gray-200");
         header.appendChild(label);
         header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
         li.appendChild(header);
-
       } else {
-        // Simple label
         header.appendChild(label);
         li.appendChild(header);
       }
@@ -175,21 +166,11 @@
   }
 
   async function loadMarkdown(file, isMobile) {
-    try {
-      const res = await fetch('docs/' + file);
-      if(!res.ok) {
-        document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur de chargement : ${res.status}</p>`;
-        return;
-      }
-      const md = await res.text();
-      document.getElementById('content').innerHTML = marked.parse(md);
+    const res = await fetch('docs/' + file);
+    const md = await res.text();
+    document.getElementById('content').innerHTML = marked.parse(md);
 
-      // Fermer sidebar mobile si ouvert
-      if(isMobile) toggleSidebar(false);
-
-    } catch(e) {
-      document.getElementById('content').innerHTML = `<p class="text-red-600">Erreur : ${e.message}</p>`;
-    }
+    if(isMobile) toggleSidebarMobile(false);
   }
 
   window.addEventListener('DOMContentLoaded', init);
