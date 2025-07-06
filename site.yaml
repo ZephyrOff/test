@@ -4,7 +4,7 @@ search: True
 theme: True
 content:
   mes projets:
-    icon: project.svg
+    icon: assets/project.svg
     content:
       projetA:
         icon: projA.svg
