@@ -156,6 +156,8 @@
   async function loadMarkdown(file, isMobile) {
     const res = await fetch('docs/' + file);
     const md = await res.text();
+    console.log(md);
+    console.log(marked.parse(md));
     document.getElementById('content').innerHTML = marked.parse(md);
     if (isMobile) toggleSidebarMobile(false);
   }
