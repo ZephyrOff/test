@@ -30,6 +30,10 @@
   --border: var(--dark3);
 }
 
+.sidebar {
+  background-color: rgb(30, 35, 45);
+}
+
 body {
   background-color: var(--background);
   color: var(--text-normal);
