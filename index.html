@@ -10,16 +10,16 @@
 <body class="h-full flex flex-col">
 
 <div class="flex h-full">
-  <!-- Sidebar -->
+  <!-- Sidebar desktop -->
   <nav id="sidebar" class="hidden md:flex flex-col w-64 bg-white border-r border-gray-300 overflow-y-auto transition-all duration-300">
     <div class="p-4 flex justify-between items-center border-b border-gray-300">
       <span class="text-xl font-semibold">Menu</span>
-      <button onclick="toggleSidebarDesktop()" class="text-gray-600 hover:text-gray-900">←</button>
+      <button onclick="toggleSidebarDesktop(false)" class="text-gray-600 hover:text-gray-900">←</button>
     </div>
     <div id="menuContainer" class="flex-1 px-2 py-4"></div>
   </nav>
 
-  <!-- Sidebar mobile overlay -->
+  <!-- Sidebar mobile -->
   <div id="mobileSidebar" class="fixed inset-0 z-40 hidden md:hidden">
     <div class="absolute inset-0 bg-black bg-opacity-50" onclick="toggleSidebarMobile(false)"></div>
     <nav class="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg p-4 overflow-y-auto" onclick="event.stopPropagation()">
@@ -33,12 +33,13 @@
 
   <!-- Main content -->
   <main id="content" class="flex-1 p-6 overflow-auto transition-all duration-300">
-    <!-- Bouton pour ouvrir sidebar mobile & desktop -->
+    <!-- Bouton toggle mobile -->
     <button id="sidebarToggleBtn"
             class="mb-4 px-3 py-2 bg-gray-200 rounded md:hidden"
             onclick="toggleSidebarMobile()">
       ☰ Menu
     </button>
+    <!-- Bouton toggle desktop -->
     <button id="sidebarOpenBtn"
             class="hidden md:inline-block mb-4 px-3 py-2 bg-gray-200 rounded"
             onclick="toggleSidebarDesktop(true)">
@@ -51,34 +52,27 @@
 </div>
 
 <script>
-  let sidebarOpenMobile = false;
-  let sidebarOpenDesktop = true;
-
   function toggleSidebarMobile(force) {
-    sidebarOpenMobile = force !== undefined ? force : !sidebarOpenMobile;
     const sidebar = document.getElementById('mobileSidebar');
-    sidebar.classList.toggle('hidden', !sidebarOpenMobile);
-    document.body.style.overflow = sidebarOpenMobile ? 'hidden' : '';
+    const show = force !== undefined ? force : sidebar.classList.contains('hidden');
+    sidebar.classList.toggle('hidden', !show);
+    document.body.style.overflow = show ? 'hidden' : '';
   }
 
   function toggleSidebarDesktop(force) {
     const sidebar = document.getElementById('sidebar');
     const openBtn = document.getElementById('sidebarOpenBtn');
-    sidebarOpenDesktop = force !== undefined ? force : !sidebarOpenDesktop;
+    const show = force !== undefined ? force : sidebar.classList.contains('hidden');
 
-    if (sidebarOpenDesktop) {
-      sidebar.classList.remove('hidden');
-      openBtn.classList.add('hidden');
-    } else {
-      sidebar.classList.add('hidden');
-      openBtn.classList.remove('hidden');
-    }
+    sidebar.classList.toggle('hidden', !show);
+    openBtn.classList.toggle('hidden', show);
   }
 
   async function init() {
     const res = await fetch('site.json');
     const data = await res.json();
-
+    document.getElementById('menuContainer').innerHTML = '';
+    document.getElementById('mobileMenuContainer').innerHTML = '';
     buildMenu(data.content || data, document.getElementById('menuContainer'), false);
     buildMenu(data.content || data, document.getElementById('mobileMenuContainer'), true);
   }
@@ -87,45 +81,40 @@
     const ul = document.createElement('ul');
     ul.className = "space-y-1";
 
-    Object.keys(node).forEach(key => {
-      if(['icon','search','theme'].includes(key)) return;
+    for (const key of Object.keys(node)) {
+      if (['icon', 'search', 'theme'].includes(key)) continue;
 
       const item = node[key];
       let isPage = false;
       let mdPath = null;
       let children = null;
 
-      if(typeof item === 'string' && item.endsWith('.md')) {
+      if (typeof item === 'string' && item.endsWith('.md')) {
         isPage = true;
         mdPath = item;
-      } else if(typeof item === 'object') {
-        if(typeof item.content === 'string' && item.content.endsWith('.md')) {
+      } else if (typeof item === 'object') {
+        if (typeof item.content === 'string' && item.content.endsWith('.md')) {
           isPage = true;
           mdPath = item.content;
-        }
-
-        if(typeof item.content === 'object') {
+        } else if (typeof item.content === 'object') {
           children = item.content;
         } else {
           const extras = {};
-          for(const k in item) {
-            if(!['icon','content'].includes(k)) extras[k] = item[k];
+          for (const k in item) {
+            if (!['icon', 'content'].includes(k)) extras[k] = item[k];
           }
-          if(Object.keys(extras).length) children = extras;
+          if (Object.keys(extras).length) children = extras;
         }
       }
 
       const li = document.createElement('li');
-      li.className = "select-none";
-
       const header = document.createElement('div');
       header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
-
       const label = document.createElement('span');
       label.textContent = key;
       label.className = "text-gray-800";
 
-      if(children) {
+      if (children) {
         header.classList.add("cursor-pointer");
 
         const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -137,22 +126,22 @@
         header.appendChild(caret);
 
         const submenu = document.createElement('ul');
-        submenu.className = "pl-6 mt-1 space-y-1 hidden";
+        submenu.className = "pl-4 mt-1 space-y-1 hidden";
 
         header.addEventListener('click', () => {
-          const isHidden = submenu.classList.contains('hidden');
-          submenu.classList.toggle('hidden', !isHidden);
-          caret.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+          const hidden = submenu.classList.contains('hidden');
+          submenu.classList.toggle('hidden', !hidden);
+          caret.style.transform = hidden ? 'rotate(90deg)' : 'rotate(0deg)';
         });
 
         buildMenu(children, submenu, isMobile);
         li.appendChild(header);
         li.appendChild(submenu);
 
-      } else if(isPage) {
-        header.classList.add("cursor-pointer", "hover:bg-gray-200");
-        header.appendChild(label);
+      } else if (isPage) {
+        header.classList.add("cursor-pointer");
         header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
+        header.appendChild(label);
         li.appendChild(header);
       } else {
         header.appendChild(label);
@@ -160,8 +149,7 @@
       }
 
       ul.appendChild(li);
-    });
-
+    }
     container.appendChild(ul);
   }
 
@@ -169,8 +157,7 @@
     const res = await fetch('docs/' + file);
     const md = await res.text();
     document.getElementById('content').innerHTML = marked.parse(md);
-
-    if(isMobile) toggleSidebarMobile(false);
+    if (isMobile) toggleSidebarMobile(false);
   }
 
   window.addEventListener('DOMContentLoaded', init);
