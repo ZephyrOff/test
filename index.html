@@ -93,18 +93,16 @@ function buildMenu(node, container, isMobile) {
     let children = null;
     let iconPath = null;
 
-    // Détecter icône au bon niveau
     if (typeof item === 'object' && 'icon' in item) {
       iconPath = item.icon;
     }
 
-    // Déterminer le type de nœud
+    // Détermine si c'est une page ou un dossier
     if (typeof item === 'string' && item.endsWith('.md')) {
       isPage = true;
       mdPath = item;
 
     } else if (typeof item === 'object') {
-
       if (typeof item.content === 'string' && item.content.endsWith('.md')) {
         isPage = true;
         mdPath = item.content;
@@ -113,7 +111,7 @@ function buildMenu(node, container, isMobile) {
         children = item.content;
 
       } else {
-        // ⚡ Cas où pas de content explicite mais sous-nœuds présents
+        // cas projetC : pas de content, mais des sous-noeuds
         const extras = {};
         for (const k in item) {
           if (!['icon'].includes(k)) {
@@ -130,7 +128,6 @@ function buildMenu(node, container, isMobile) {
     const header = document.createElement('div');
     header.className = "flex items-center justify-between px-2 py-1 rounded";
 
-    // Container icône + texte
     const labelWrapper = document.createElement('span');
     labelWrapper.className = "flex items-center gap-2 text-gray-800";
 
@@ -166,7 +163,9 @@ function buildMenu(node, container, isMobile) {
         caret.style.transform = hidden ? 'rotate(90deg)' : 'rotate(0deg)';
       });
 
+      // Recursion
       buildMenu(children, submenu, isMobile);
+
       li.appendChild(header);
       li.appendChild(submenu);
 
@@ -176,6 +175,7 @@ function buildMenu(node, container, isMobile) {
       li.appendChild(header);
 
     } else {
+      // Cas improbable : ni page ni enfant → juste un label
       li.appendChild(header);
     }
 
@@ -183,7 +183,6 @@ function buildMenu(node, container, isMobile) {
   }
   container.appendChild(ul);
 }
-
 
 
   function preprocessMarkdown(markdownText) {
