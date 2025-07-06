@@ -91,14 +91,8 @@
     let isPage = false;
     let mdPath = null;
     let children = null;
-    let iconHTML = null;
+    let iconPath = null;
 
-    // 1️⃣ Détecter l'icône si présente
-    if (typeof item === 'object' && item.icon) {
-      iconHTML = item.icon;
-    }
-
-    // 2️⃣ Vérifier si c’est une page ou un sous-menu
     if (typeof item === 'string' && item.endsWith('.md')) {
       isPage = true;
       mdPath = item;
@@ -111,39 +105,46 @@
       } else {
         const extras = {};
         for (const k in item) {
-          if (!['icon', 'content'].includes(k)) extras[k] = item[k];
+          if (k === 'icon') {
+            iconPath = item[k];  // Récupère le chemin vers l'icône
+          } else if (!['content'].includes(k)) {
+            extras[k] = item[k];
+          }
         }
         if (Object.keys(extras).length) children = extras;
       }
+      if (item.icon) {
+        iconPath = item.icon; // Sécurité : on récupère aussi ici
+      }
     }
 
-    // 3️⃣ Création du li
     const li = document.createElement('li');
     const header = document.createElement('div');
-    header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
+    header.className = "flex items-center justify-between px-2 py-1 rounded";
 
-    // Conteneur icône + label
-    const labelWrapper = document.createElement('div');
+    // Conteneur pour icône + texte
+    const labelWrapper = document.createElement('span');
     labelWrapper.className = "flex items-center gap-2";
 
-    if (iconHTML) {
-      const iconSpan = document.createElement('span');
-      iconSpan.innerHTML = iconHTML; // SVG inline
-      iconSpan.className = "w-4 h-4 inline-block";
-      labelWrapper.appendChild(iconSpan);
+    // Ajoute <img> si icône présente
+    if (iconPath) {
+      const img = document.createElement('img');
+      img.src = iconPath;
+      img.alt = ""; // Accessibilité
+      img.className = "w-4 h-4";
+      labelWrapper.appendChild(img);
     }
 
     const label = document.createElement('span');
     label.textContent = key;
     labelWrapper.appendChild(label);
 
-    // Gestion sous-menu
     if (children) {
       header.classList.add("cursor-pointer");
 
       const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       caret.setAttribute("viewBox", "0 0 20 20");
-      caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
+      caret.classList.add("w-4", "h-4", "transition-transform", "duration-200");
       caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
 
       header.appendChild(labelWrapper);
@@ -167,7 +168,6 @@
       header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
       header.appendChild(labelWrapper);
       li.appendChild(header);
-
     } else {
       header.appendChild(labelWrapper);
       li.appendChild(header);
