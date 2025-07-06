@@ -37,28 +37,59 @@ body {
   line-height: 1.6;
 }
 
-main.markdown-rendered {
-  max-width: 800px;
-}
 
 main h1 {
   color: var(--red);
+  font-size: 2.2rem;
+  line-height: 1.2;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
   border-bottom: 2px solid var(--border);
   padding-bottom: 0.3em;
-  margin-top: 1em;
 }
 
 main h2 {
   color: var(--yellow);
+  font-size: 1.8rem;
+  line-height: 1.3;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.2em;
-  margin-top: 1em;
 }
 
-main h3 { color: var(--green); margin-top: 1em; }
-main h4 { color: var(--purple); margin-top: 1em; }
-main h5 { color: var(--frost0); margin-top: 1em; }
-main h6 { color: var(--frost2); margin-top: 1em; }
+main h3 {
+  color: var(--green);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin-top: 1em;
+  margin-bottom: 0.3em;
+}
+
+main h4 {
+  color: var(--purple);
+  font-size: 1.3rem;
+  line-height: 1.3;
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+main h5 {
+  color: var(--frost0);
+  font-size: 1.1rem;
+  line-height: 1.2;
+  margin-top: 0.8em;
+  margin-bottom: 0.2em;
+}
+
+main h6 {
+  color: var(--frost2);
+  font-size: 1rem;
+  line-height: 1.2;
+  margin-top: 0.8em;
+  margin-bottom: 0.2em;
+}
+
 
 main p {
   margin: 1em 0;
