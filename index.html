@@ -195,8 +195,8 @@
     const md = await res.text();
     console.log(md);
     console.log(marked.parse(md));
-    const doc_content = parseMetadataJS(preprocessed)
-    const preprocessed = preprocessMarkdown(doc_content);
+    const { content } = parseMetadataJS(preprocessed)
+    const preprocessed = preprocessMarkdown(content);
     document.getElementById('content').innerHTML = marked.parse(preprocessed);
     Prism.highlightAll();
     if (isMobile) toggleSidebarMobile(false);
