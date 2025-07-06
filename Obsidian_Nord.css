@@ -1,14 +1,14 @@
-/* ============================================
-   Obsidian_Nord - Simplified Markdown Theme
-   ============================================ */
+/* ===============================
+   Obsidian_Nord.css - Light & Dark
+   =============================== */
 
 :root {
-  --dark0: #2e3440; /* Polar Night */
+  --dark0: #2e3440;
   --dark1: #3b4252;
   --dark2: #434c5e;
   --dark3: #4c566a;
 
-  --light0: #d8dee9; /* Snow Storm */
+  --light0: #d8dee9;
   --light1: #e5e9f0;
   --light2: #eceff4;
 
@@ -22,115 +22,133 @@
   --yellow: #ebcb8b;
   --green: #a3be8c;
   --purple: #b48ead;
+
+  --text-normal: var(--light2);
+  --text-muted: var(--light1);
+  --background: var(--dark0);
+  --background-alt: var(--dark1);
+  --border: var(--dark3);
 }
 
 body {
-  background: var(--dark0);
-  color: var(--light2);
+  background-color: var(--background);
+  color: var(--text-normal);
   font-family: system-ui, sans-serif;
-  line-height: 1.7;
-  padding: 2rem;
+  line-height: 1.6;
 }
 
-h1 {
+main.markdown-rendered {
+  max-width: 800px;
+}
+
+main h1 {
   color: var(--red);
-  border-bottom: 2px solid var(--dark2);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.3em;
+  margin-top: 1em;
 }
 
-h2 { color: var(--yellow); }
-h3 { color: var(--green); }
-h4 { color: var(--purple); }
-h5 { color: var(--frost0); }
-h6 { color: var(--frost2); }
+main h2 {
+  color: var(--yellow);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2em;
+  margin-top: 1em;
+}
 
-a {
+main h3 { color: var(--green); margin-top: 1em; }
+main h4 { color: var(--purple); margin-top: 1em; }
+main h5 { color: var(--frost0); margin-top: 1em; }
+main h6 { color: var(--frost2); margin-top: 1em; }
+
+main p {
+  margin: 1em 0;
+}
+
+main a {
   color: var(--frost1);
   text-decoration: underline;
 }
 
-a:hover {
+main a:hover {
   color: var(--frost2);
 }
 
-p {
+main blockquote {
+  border-left: 4px solid var(--frost1);
+  background: var(--background-alt);
+  color: var(--text-muted);
+  padding: 0.8em 1em;
   margin: 1em 0;
 }
 
-blockquote {
-  border-left: 4px solid var(--frost1);
-  background: var(--dark1);
-  padding: 0.8em 1em;
-  color: var(--light1);
-}
-
-code {
+main code {
   background: var(--dark2);
   color: var(--frost2);
   padding: 0.2em 0.4em;
   border-radius: 4px;
 }
 
-pre {
-  background: var(--dark1);
+main pre {
+  background: var(--background-alt);
   color: var(--light2);
   padding: 1em;
   border-radius: 6px;
   overflow-x: auto;
 }
 
-table {
+main table {
   width: 100%;
   border-collapse: collapse;
   margin: 1.5em 0;
 }
 
-th {
+main th {
   background: var(--dark2);
   color: var(--light2);
   text-align: left;
   padding: 0.5em;
 }
 
-td {
-  border-top: 1px solid var(--dark3);
+main td {
+  border-top: 1px solid var(--border);
   padding: 0.5em;
 }
 
-tr:nth-child(even) {
+main tr:nth-child(even) {
   background: var(--dark1);
 }
 
-hr {
+main hr {
   border: none;
-  border-top: 1px solid var(--dark3);
+  border-top: 1px solid var(--border);
   margin: 2em 0;
 }
 
-strong {
+main strong {
   color: var(--yellow);
   font-weight: bold;
 }
 
-em {
+main em {
   color: var(--orange);
 }
 
-ul, ol {
+main ul,
+main ol {
   padding-left: 2em;
   margin: 1em 0;
 }
 
-li {
+main li {
   margin: 0.3em 0;
 }
 
-img {
+main img {
   max-width: 100%;
   border-radius: 6px;
 }
 
-.mark {
+main mark {
   background: var(--yellow);
   color: var(--dark0);
 }
-
