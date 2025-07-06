@@ -8,6 +8,23 @@ Visibility: Public
 tags:
 - Linux
 ---
+
+```python
+def flatten_structure(node, base_path=""):
+    pages = []
+    for key, value in node.items():
+        if key in ("icon",): continue
+        if isinstance(value, dict):
+            if isinstance(value.get("content"), str):
+                pages.append({
+                    "title": key,
+                    "file": value["content"]
+                })
+            elif isinstance(value.get("content"), dict):
+                pages.extend(flatten_structure(value["content"], base_path))
+    return pages
+```
+
 ## Gestion utilisateur
 
 - [[3. Ressource/Linux/Utilisateur|Utilisateur]]

@@ -165,12 +165,38 @@
       });
   }
 
+  function parseMetadataJS(content) {
+    // Détecte le front matter YAML entre ---
+    const regex = /^---\s*([\s\S]*?)\s*---\s*/;
+
+    const match = content.match(regex);
+    let metadata = {};
+    let cleanedContent = content;
+
+    if (match) {
+      const yamlText = match[1];
+
+      // Si tu veux parser le YAML en JS → simple si tu ajoutes js-yaml
+      // Par exemple :
+      // metadata = jsyaml.load(yamlText);
+
+      // Si tu n’as pas besoin du contenu YAML :
+      metadata = yamlText; // ou laisse vide
+
+      // Enlève le bloc YAML du contenu
+      cleanedContent = content.slice(match[0].length).trim();
+    }
+
+    return { metadata, content: cleanedContent };
+  }
+
   async function loadMarkdown(file, isMobile) {
     const res = await fetch('docs/' + file);
     const md = await res.text();
     console.log(md);
     console.log(marked.parse(md));
-    const preprocessed = preprocessMarkdown(md);
+    const doc_content = parseMetadataJS(preprocessed)
+    const preprocessed = preprocessMarkdown(doc_content);
     document.getElementById('content').innerHTML = marked.parse(preprocessed);
     Prism.highlightAll();
     if (isMobile) toggleSidebarMobile(false);
