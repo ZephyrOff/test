@@ -155,7 +155,7 @@ function buildMenu(node, container, isMobile) {
       header.appendChild(caret);
 
       const submenu = document.createElement('ul');
-      submenu.className = "pl-4 mt-1 space-y-1 hidden";
+      submenu.className = "mt-1 space-y-1 hidden";
 
       header.addEventListener('click', () => {
         const hidden = submenu.classList.contains('hidden');
