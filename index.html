@@ -112,17 +112,16 @@
 
       const li = document.createElement('li');
       const header = document.createElement('div');
-      header.className = "flex items-center justify-between px-2 py-1 rounded hover:bg-gray-100";
+      header.className = "flex items-center justify-between px-2 py-1 rounded";
       const label = document.createElement('span');
       label.textContent = key;
-      label.className = "text-gray-300";
 
       if (children) {
         header.classList.add("cursor-pointer");
 
         const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         caret.setAttribute("viewBox", "0 0 20 20");
-        caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
+        caret.classList.add("w-4", "h-4", "transition-transform", "duration-200");
         caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
 
         header.appendChild(label);
