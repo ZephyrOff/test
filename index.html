@@ -80,12 +80,12 @@
     buildMenu(data.content || data, document.getElementById('mobileMenuContainer'), true);
   }
 
-  function buildMenu(node, container, isMobile) {
+function buildMenu(node, container, isMobile) {
   const ul = document.createElement('ul');
   ul.className = "space-y-1";
 
   for (const key of Object.keys(node)) {
-    if (['search', 'theme'].includes(key)) continue;
+    if (['icon', 'search', 'theme'].includes(key)) continue;
 
     const item = node[key];
     let isPage = false;
@@ -93,28 +93,36 @@
     let children = null;
     let iconPath = null;
 
+    // Détecter icône au bon niveau
+    if (typeof item === 'object' && 'icon' in item) {
+      iconPath = item.icon;
+    }
+
+    // Déterminer le type de nœud
     if (typeof item === 'string' && item.endsWith('.md')) {
       isPage = true;
       mdPath = item;
+
     } else if (typeof item === 'object') {
+
       if (typeof item.content === 'string' && item.content.endsWith('.md')) {
         isPage = true;
         mdPath = item.content;
+
       } else if (typeof item.content === 'object') {
         children = item.content;
+
       } else {
+        // ⚡ Cas où pas de content explicite mais sous-nœuds présents
         const extras = {};
         for (const k in item) {
-          if (k === 'icon') {
-            iconPath = item[k];  // Récupère le chemin vers l'icône
-          } else if (!['content'].includes(k)) {
+          if (!['icon'].includes(k)) {
             extras[k] = item[k];
           }
         }
-        if (Object.keys(extras).length) children = extras;
-      }
-      if (item.icon) {
-        iconPath = item.icon; // Sécurité : on récupère aussi ici
+        if (Object.keys(extras).length) {
+          children = extras;
+        }
       }
     }
 
@@ -122,32 +130,31 @@
     const header = document.createElement('div');
     header.className = "flex items-center justify-between px-2 py-1 rounded";
 
-    // Conteneur pour icône + texte
+    // Container icône + texte
     const labelWrapper = document.createElement('span');
-    labelWrapper.className = "flex items-center gap-2";
+    labelWrapper.className = "flex items-center gap-2 text-gray-800";
 
-    // Ajoute <img> si icône présente
     if (iconPath) {
-      const img = document.createElement('img');
-      img.src = iconPath;
-      img.alt = ""; // Accessibilité
-      img.className = "w-4 h-4";
-      labelWrapper.appendChild(img);
+      const iconImg = document.createElement('img');
+      iconImg.src = iconPath;
+      iconImg.className = "w-4 h-4";
+      labelWrapper.appendChild(iconImg);
     }
 
     const label = document.createElement('span');
     label.textContent = key;
     labelWrapper.appendChild(label);
 
+    header.appendChild(labelWrapper);
+
     if (children) {
       header.classList.add("cursor-pointer");
 
       const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       caret.setAttribute("viewBox", "0 0 20 20");
-      caret.classList.add("w-4", "h-4", "transition-transform", "duration-200");
+      caret.classList.add("w-4", "h-4", "text-gray-500", "transition-transform", "duration-200");
       caret.innerHTML = '<path fill="currentColor" d="M6 6l6 4-6 4z"/>';
 
-      header.appendChild(labelWrapper);
       header.appendChild(caret);
 
       const submenu = document.createElement('ul');
@@ -166,10 +173,9 @@
     } else if (isPage) {
       header.classList.add("cursor-pointer");
       header.addEventListener('click', () => loadMarkdown(mdPath, isMobile));
-      header.appendChild(labelWrapper);
       li.appendChild(header);
+
     } else {
-      header.appendChild(labelWrapper);
       li.appendChild(header);
     }
 
@@ -177,6 +183,7 @@
   }
   container.appendChild(ul);
 }
+
 
 
   function preprocessMarkdown(markdownText) {
